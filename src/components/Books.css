@@ -1,0 +1,22 @@
+/* *:focus {
+  outline: none;
+} */
+
+#genres-holder {
+  display: inline-block;
+  /* vertical-align:top; */
+  overflow: hidden;
+}
+
+#genres-holder select {
+  /* appearance: none; */
+  /* -webkit-appearance: none; */
+  /* background-color: transparent; */
+  padding: 10px;
+  margin: -5px -20px -5px -5px;
+}
+
+#genres-holder select option {
+  display: inline-block;
+  border-style: groove;
+}
