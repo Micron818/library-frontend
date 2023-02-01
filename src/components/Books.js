@@ -9,11 +9,20 @@ const Books = (props) => {
   const resultByGenres = useQuery(SEARCH_BY_GENRES, {
     variables: { genre: selectGenres === 'all' ? null : selectGenres },
     skip: !selectGenres,
-    fetchPolicy:'no-cache'
+    /* here still has a bug: 
+      because addBook in NewBook, just updateQuery cache allBooks({"genre":null}),
+      don't have update another selectGenres cache, ex. allBooks({"genre":"nosql"})
+      if the added genre same with genre cache before, would miss update the cache.
+      so have to change the default cache-first policy to 'cache-and-network'
+    */
+    fetchPolicy: 'cache-first',
+    // fetchPolicy: 'cache-and-network',
   })
 
   useEffect(() => {
-    if (resultByGenres.data) setBooks(resultByGenres.data.allBooks)
+    if (resultByGenres.data) {
+      setBooks(resultByGenres.data.allBooks)
+    }
   }, [resultByGenres.data])
 
   const distinctGenres = useRef([])

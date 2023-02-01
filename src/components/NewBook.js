@@ -1,6 +1,7 @@
 import { useMutation } from '@apollo/client'
 import { useState } from 'react'
-import { ADD_BOOK, ALL_AUTHORS, ALL_BOOKS } from '../queries'
+import { uniqBooksByTitle } from '../App'
+import { ADD_BOOK, SEARCH_BY_GENRES } from '../queries'
 
 const NewBook = (props) => {
   const [title, setTitle] = useState('')
@@ -10,17 +11,19 @@ const NewBook = (props) => {
   const [genres, setGenres] = useState([])
 
   const [addBook] = useMutation(ADD_BOOK, {
-    refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
     onError: (error) => {
       console.log(error.message)
     },
     update: (cache, response) => {
-      cache.updateQuery({ query: ALL_BOOKS }, (data) => {
-        console.log('data:', data)//why null?
-        return {
-          allBooks: data.allBooks.concat(response.data.addBook),
+      cache.updateQuery(
+        { query: SEARCH_BY_GENRES, variables: { genre: null } },
+        (data) => {
+          if (!data) return null
+          return {
+            allBooks: uniqBooksByTitle(data.allBooks.concat(response.data.addBook)),
+          }
         }
-      })
+      )
     },
   })
 

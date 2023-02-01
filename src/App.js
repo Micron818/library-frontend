@@ -1,12 +1,44 @@
 import { useEffect, useState } from 'react'
+
+import { useSubscription, useApolloClient } from '@apollo/client'
+
 import Authors from './components/Authors'
 import Books from './components/Books'
 import LoginForm from './components/LoginForm'
 import NewBook from './components/NewBook'
+import { SEARCH_BY_GENRES, BOOK_ADDED } from './queries'
+
+export const uniqBooksByTitle = (a) => {
+  let seen = new Set()
+  return a.filter((item) => {
+    let k = item.title
+    return seen.has(k) ? false : seen.add(k)
+  })
+}
 
 const App = () => {
   const [page, setPage] = useState('authors')
   const [token, setToken] = useState(null)
+
+  const client = useApolloClient()
+
+  useSubscription(BOOK_ADDED, {
+    onData: ({ data }) => {
+      const addedBook = data.data.bookAdded
+
+      // console.log(`${addedBook.title} added`)
+
+      client.cache.updateQuery(
+        { query: SEARCH_BY_GENRES, variables: { genre: null } },
+        (data) => {
+          if (!data) return null
+          return {
+            allBooks: uniqBooksByTitle(data.allBooks.concat(addedBook)),
+          }
+        }
+      )
+    },
+  })
 
   const logout = () => {
     setToken(null)
