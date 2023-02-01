@@ -1,50 +1,45 @@
-import { useQuery } from '@apollo/client'
-import { useEffect, useRef, useState } from 'react'
-import { SEARCH_BY_GENRES } from '../queries'
+import _ from 'lodash'
+import { useLazyQuery, useQuery } from '@apollo/client'
+import { useEffect, useState } from 'react'
+import { ALL_BOOKS } from '../queries'
 import './Books.css'
 const Books = (props) => {
-  const [selectGenres, setSelectGenres] = useState('all')
+  const allbooksResult = useQuery(ALL_BOOKS)
+  const [genreBooks, genreBooksResult] = useLazyQuery(ALL_BOOKS)
+
+  const [genre, setGenre] = useState(null)
+  const [genres, setGenres] = useState([])
   const [books, setBooks] = useState([])
 
-  const resultByGenres = useQuery(SEARCH_BY_GENRES, {
-    variables: { genre: selectGenres === 'all' ? null : selectGenres },
-    skip: !selectGenres,
-    /* here still has a bug: 
-      because addBook in NewBook, just updateQuery cache allBooks({"genre":null}),
-      don't have update another selectGenres cache, ex. allBooks({"genre":"nosql"})
-      if the added genre same with genre cache before, would miss update the cache.
-      so have to change the default cache-first policy to 'cache-and-network'
-    */
-    fetchPolicy: 'cache-first',
-    // fetchPolicy: 'cache-and-network',
-  })
+  useEffect(() => {
+    if (allbooksResult.data && allbooksResult.data.allBooks && !genre) {
+      const books = allbooksResult.data.allBooks
+      setBooks(books)
+      const genres = _.uniq(books.flatMap((b) => b.genres))
+      setGenres(genres)
+    }
+  }, [allbooksResult.data, genre])
 
   useEffect(() => {
-    if (resultByGenres.data) {
-      setBooks(resultByGenres.data.allBooks)
+    if (genreBooksResult.data) {
+      setBooks(genreBooksResult.data.allBooks)
     }
-  }, [resultByGenres.data])
+  }, [genreBooksResult.data])
 
-  const distinctGenres = useRef([])
-  if (selectGenres === 'all') {
-    distinctGenres.current = Array.from(
-      new Set(
-        books.reduce(
-          (accumulator, currentValue) => [
-            ...accumulator,
-            ...currentValue.genres,
-          ],
-          []
-        )
-      )
-    )
-  }
-
-  if (!props.show) {
+  if (!props.show || !books) {
     return null
   }
 
-  if (resultByGenres.loading) return <div>loading...</div>
+  const onGenreClick = (newGenre) => {
+    setGenre(newGenre)
+    genreBooks({
+      variables: {
+        genre: newGenre,
+      },
+    })
+  }
+
+  if (allbooksResult.loading) return <div>loading...</div>
 
   return (
     <>
@@ -67,19 +62,13 @@ const Books = (props) => {
         </tbody>
       </table>
 
-      <div id="genres-holder">
-        <select
-          size="2"
-          value={selectGenres}
-          onChange={({ target }) => setSelectGenres(target.value)}
-        >
-          {distinctGenres.current.map((genres) => (
-            <option key={genres} value={genres}>
-              {genres}
-            </option>
-          ))}
-          <option value="all">all genres</option>
-        </select>
+      <div>
+        {genres.map((g) => (
+          <button key={g} onClick={() => onGenreClick(g)}>
+            {g}
+          </button>
+        ))}
+        <button onClick={() => onGenreClick(null)}>all genres</button>
       </div>
     </>
   )

@@ -20,19 +20,8 @@ export const ALL_AUTHORS = gql`
     }
   }
 `
-
 export const ALL_BOOKS = gql`
-  query {
-    allBooks {
-      ...BookDetails
-    }
-  }
-
-  ${BOOK_DETAILS}
-`
-
-export const SEARCH_BY_GENRES = gql`
-  query searchByGenres($genre: String) {
+  query allBooks($genre: String) {
     allBooks(genre: $genre) {
       ...BookDetails
     }

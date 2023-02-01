@@ -6,7 +6,7 @@ import Authors from './components/Authors'
 import Books from './components/Books'
 import LoginForm from './components/LoginForm'
 import NewBook from './components/NewBook'
-import { SEARCH_BY_GENRES, BOOK_ADDED } from './queries'
+import { ALL_BOOKS, BOOK_ADDED } from './queries'
 
 export const uniqBooksByTitle = (a) => {
   let seen = new Set()
@@ -29,12 +29,12 @@ const App = () => {
       // console.log(`${addedBook.title} added`)
 
       client.cache.updateQuery(
-        { query: SEARCH_BY_GENRES, variables: { genre: null } },
+        { query: ALL_BOOKS, variables: { genre: null } },
         (data) => {
           if (!data) return null
-          return {
-            allBooks: uniqBooksByTitle(data.allBooks.concat(addedBook)),
-          }
+          // return {
+          //   allBooks: uniqBooksByTitle(data.allBooks.concat(addedBook)),
+          // }
         }
       )
     },

@@ -1,7 +1,7 @@
 import { useMutation } from '@apollo/client'
 import { useState } from 'react'
 import { uniqBooksByTitle } from '../App'
-import { ADD_BOOK, SEARCH_BY_GENRES } from '../queries'
+import { ADD_BOOK, ALL_BOOKS } from '../queries'
 
 const NewBook = (props) => {
   const [title, setTitle] = useState('')
@@ -15,15 +15,20 @@ const NewBook = (props) => {
       console.log(error.message)
     },
     update: (cache, response) => {
-      cache.updateQuery(
-        { query: SEARCH_BY_GENRES, variables: { genre: null } },
-        (data) => {
-          if (!data) return null
-          return {
-            allBooks: uniqBooksByTitle(data.allBooks.concat(response.data.addBook)),
+      //solution for genres iterate update cache , and fix bug for all genres cache
+      genres.concat(null).forEach((genre) => {
+        cache.updateQuery(
+          { query: ALL_BOOKS, variables: { genre } },
+          (data) => {
+            if (!data) return null
+            return {
+              allBooks: uniqBooksByTitle(
+                data.allBooks.concat(response.data.addBook)
+              ),
+            }
           }
-        }
-      )
+        )
+      })
     },
   })
 
