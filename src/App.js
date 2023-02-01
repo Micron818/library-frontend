@@ -26,15 +26,15 @@ const App = () => {
     onData: ({ data }) => {
       const addedBook = data.data.bookAdded
 
-      // console.log(`${addedBook.title} added`)
+      console.log(`${addedBook.title} added`)
 
       client.cache.updateQuery(
         { query: ALL_BOOKS, variables: { genre: null } },
         (data) => {
           if (!data) return null
-          // return {
-          //   allBooks: uniqBooksByTitle(data.allBooks.concat(addedBook)),
-          // }
+          return {
+            allBooks: uniqBooksByTitle(data.allBooks.concat(addedBook)),
+          }
         }
       )
     },
